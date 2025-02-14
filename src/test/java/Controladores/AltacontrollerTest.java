@@ -50,7 +50,6 @@ class AltacontrollerTest {
     robot.sleep(1500);
     robot.clickOn("#altaBoton");
     robot.sleep(1000);
-
     robot.clickOn("#botonAceptar");
     robot.sleep(500);
     Optional<DialogPane> dialogPane = robot.lookup(".dialog-pane").tryQueryAs(DialogPane.class);
@@ -85,7 +84,7 @@ class AltacontrollerTest {
   }
 
   @Test
-  void TestAltaCliente3Campos(FxRobot robot) {
+  void TestAltaClienteCon3Campos(FxRobot robot) {
     robot.clickOn("#BuscarButton");
     robot.sleep(500);
     assertTrue(robot.lookup("#InicializarTabla").query().isVisible());
