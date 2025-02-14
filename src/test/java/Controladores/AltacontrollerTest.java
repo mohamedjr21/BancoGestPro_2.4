@@ -54,9 +54,7 @@ class AltacontrollerTest {
     robot.clickOn("#botonAceptar");
     robot.sleep(500);
     Optional<DialogPane> dialogPane = robot.lookup(".dialog-pane").tryQueryAs(DialogPane.class);
-
   }
-
 
   @Test
   void TestAltaCliente1Campo(FxRobot robot) {
@@ -70,7 +68,6 @@ class AltacontrollerTest {
     robot.clickOn("#botonAceptar");
     robot.sleep(500);
   }
-
 
   @Test
   void TestAltaCliente2Campos(FxRobot robot) {
@@ -86,8 +83,6 @@ class AltacontrollerTest {
     robot.clickOn("#botonAceptar");
     robot.sleep(500);
   }
-
-
 
   @Test
   void TestAltaCliente3Campos(FxRobot robot) {
@@ -123,7 +118,6 @@ class AltacontrollerTest {
     robot.sleep(500);
     robot.clickOn("#BuscarButton");
   }
-
 
   @Test
   void TestAltaCliente(FxRobot robot) {

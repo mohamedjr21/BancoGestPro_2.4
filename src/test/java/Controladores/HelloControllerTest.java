@@ -1,6 +1,5 @@
 package Controladores;
 
-import DAO.Banco;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -8,7 +7,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import modelo.irDefault;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,12 +15,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
-
 import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(ApplicationExtension.class)
@@ -63,14 +56,11 @@ public class HelloControllerTest {
   void testEliminarRegistroRelacionadosOtrasTablas(FxRobot robot) {
     robot.clickOn("#BuscarButton");
     robot.sleep(500);
-
     robot.clickOn("4");
     robot.clickOn("#borrarButton");
     robot.sleep(500);
-
     Node mensajeAlerta = robot.lookup(".dialog-pane").query();
     assertTrue(mensajeAlerta.isVisible());
-
     robot.clickOn("Aceptar");
 
   }
@@ -86,7 +76,6 @@ public class HelloControllerTest {
 
     TableView<?> tableView = robot.lookup("#InicializarTabla").query();
     assertTrue(tableView.getItems().size() > 0, "tablaa");
-
   }
 
   @Test
@@ -102,9 +91,6 @@ public class HelloControllerTest {
     assertTrue(tableView.getItems().size() > 0, "tablaa");
 
   }
-
-
-
 
   @Test
   void testBuscarButtonPorId(FxRobot robot) {
@@ -156,11 +142,9 @@ public class HelloControllerTest {
 
     robot.clickOn("#editarButton");
     robot.sleep(2000);
-
     robot.clickOn("#conditionField");
     robot.eraseText(15);
     robot.write("almeria fc");
-
     robot.clickOn("#botonAceptar");
   }
 
@@ -169,21 +153,17 @@ public class HelloControllerTest {
   void testEditarRegistro2Campos(FxRobot robot) {
     robot.clickOn("#BuscarButton");
     robot.sleep(500);
-
     assertTrue(robot.lookup("#InicializarTabla").query().isVisible());
-
-    robot.clickOn("16");
-
+    robot.clickOn("9");
     robot.clickOn("#editarButton");
     robot.sleep(1000);
     robot.lookup("#companyIdField").query();
     robot.clickOn("#companyIdField");
     robot.eraseText(10);
     robot.write("8");
-
     robot.clickOn("#conditionField");
     robot.eraseText(20);
-    robot.write("malaga fc is the best");
+    robot.write("FACEBOOK");
 
     robot.clickOn("#botonAceptar");
 
@@ -195,26 +175,20 @@ public class HelloControllerTest {
   void testEditarRegistroTodosLosCampos(FxRobot robot) {
     robot.clickOn("#BuscarButton");
     robot.sleep(500);
-
     assertTrue(robot.lookup("#InicializarTabla").query().isVisible());
-
     robot.clickOn("1");
-
     robot.clickOn("#editarButton");
     robot.sleep(1000);
     robot.lookup("#companyIdField").query();
     robot.clickOn("#companyIdField");
     robot.eraseText(10);
     robot.write("3");
-
     robot.clickOn("#conditionField");
     robot.eraseText(20);
     robot.write("malaga fc");
-
     robot.clickOn("#jsonValueField");
     robot.eraseText(10);
     robot.write("hola");
-
     robot.clickOn("#botonAceptar");
   }
 
@@ -243,15 +217,8 @@ public class HelloControllerTest {
     robot.clickOn("#BuscarButton");
     robot.sleep(1000);
 
-
   }
-
-
 }
-
-
-
-
 
 
 
