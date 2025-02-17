@@ -129,7 +129,7 @@ class AltacontrollerTest {
     robot.clickOn("#companyIdField");
     robot.write("1");
     robot.clickOn("#conditionField");
-    robot.write("las norias fc");
+    robot.write("Las norias fc");
     robot.clickOn("#jsonValueField");
     robot.write("norias fc ");
     robot.clickOn("#botonAceptar");
