@@ -10,6 +10,7 @@ module com.example.bancomfh {
 
   exports com.example.bancomfh;
   exports Controladores;
+  //exports Tests;
   opens Controladores to javafx.fxml, org.junit.platform.commons;
   opens modelo to javafx.base;
 
