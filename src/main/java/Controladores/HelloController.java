@@ -68,7 +68,7 @@ public class HelloController {
 
         } catch (SQLException e) {
 
-          System.err.println("Error de SQL al consultar: " + e.getMessage());
+          System.err.println("Error de SQL al consultar:" + e.getMessage());
           Platform.runLater(() -> {
             Alert error = new Alert(Alert.AlertType.ERROR);
             error.setTitle("Error");
