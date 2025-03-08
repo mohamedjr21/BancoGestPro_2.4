@@ -96,14 +96,12 @@ public class Altacontroller {
       idValido.set(false);
     }
   }
-
   private void validarCampoCompanyId() {
     String valor = companyIdText.get().trim();
     if (valor.isEmpty()) {
       companyIdValido.set(false);
       return;
     }
-
     try {
       int id = Integer.parseInt(valor);
       if (id <= 0) {
@@ -115,7 +113,6 @@ public class Altacontroller {
       companyIdValido.set(false);
     }
   }
-
   private void validarCampoCondition() {
     String valor = conditionText.get().trim();
     conditionValido.set(!valor.isEmpty());
@@ -170,15 +167,12 @@ public class Altacontroller {
     validarCampoCondition();
     validarCampoJsonValue();
   }
-
-
   @FXML
   public void ButonAceptar(ActionEvent actionEvent) {
     if (!camposValidos.get()) {
       mostrarAlerta("Por favor, complete correctamente todos los campos", Alert.AlertType.WARNING);
       return;
     }
-
     try {
       final int id = Integer.parseInt(idText.get().trim());
       final int fieldId = Integer.parseInt(companyIdText.get().trim());
@@ -196,7 +190,6 @@ public class Altacontroller {
 
           Connection conexion = Conexiondb.getConnection();
           PreparedStatement stmt = conexion.prepareStatement(sql);
-
           if (isEditando) {
             stmt.setInt(1, registro.getFieldId());
             stmt.setString(2, registro.getCondition());
@@ -209,7 +202,6 @@ public class Altacontroller {
             stmt.setString(4, registro.getJsonValue());
           }
           final int actualizado = stmt.executeUpdate();
-
           Platform.runLater(() -> {
             if (actualizado>0) {
               mostrarAlerta(

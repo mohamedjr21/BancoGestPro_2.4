@@ -25,10 +25,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class HelloController {
-  private final StringProperty searchText = new SimpleStringProperty("");
-  private final BooleanProperty hasSelection = new SimpleBooleanProperty(false);
-  private final ObservableList<irDefault> tableItems = FXCollections.observableArrayList();
-
+  private final StringProperty Textobusqueda = new SimpleStringProperty("");
+  private final BooleanProperty esRegistroSeleccionado = new SimpleBooleanProperty(false);
+  private final ObservableList<irDefault> tablaCampos = FXCollections.observableArrayList();
   @FXML
   public TableView<irDefault> InicializarTabla;
   @FXML
@@ -61,51 +60,42 @@ public class HelloController {
     columna3.setCellValueFactory(new PropertyValueFactory<>("condition"));
     columna4.setCellValueFactory(new PropertyValueFactory<>("jsonValue"));
 
-    InicializarTabla.setItems(tableItems);
-
-    Bindings.bindBidirectional(NombreIntro.textProperty(), searchText);
-
+    InicializarTabla.setItems(tablaCampos);
+    Bindings.bindBidirectional(NombreIntro.textProperty(), Textobusqueda);
     InicializarTabla.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-      hasSelection.set(newValue != null);
+      esRegistroSeleccionado.set(newValue != null);
     });
+    editarButton.disableProperty().bind(esRegistroSeleccionado.not());
+    borrarButton.disableProperty().bind(esRegistroSeleccionado.not());
 
-    editarButton.disableProperty().bind(hasSelection.not());
-    borrarButton.disableProperty().bind(hasSelection.not());
-
-
+    BuscarButton.disableProperty().bind(Textobusqueda.isEmpty());
     try {
       actualizarTabla();
     } catch (SQLException e) {
       mostrarError("Error al cargar datos iniciales", e);
     }
   }
-
-
   @FXML
   public void BuscarButon(ActionEvent actionEvent) {
-    final String termino = searchText.get().trim();
-
+    final String termino = Textobusqueda.get().trim();
     Thread buscarThread = new Thread(() -> {
       try {
          List<irDefault> resultados;
-
         try {
           int id = Integer.parseInt(termino);
           resultados = Banco.buscarBancosPorId(id);
         } catch (NumberFormatException e) {
           resultados = Banco.buscarBancos(termino);
         }
-
         List<irDefault> finalResultados = resultados;
         Platform.runLater(() -> {
-          tableItems.clear();
-          tableItems.addAll(finalResultados);
+          tablaCampos.clear();
+          tablaCampos.addAll(finalResultados);
         });
       } catch (SQLException e) {
         mostrarError("Error al realizar la búsqueda", e);
       }
     });
-
     buscarThread.setDaemon(true);
     buscarThread.start();
   }
@@ -114,18 +104,16 @@ public class HelloController {
     try {
       FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/bancomfh/clienteAlta.fxml"));
       Parent root = fxmlLoader.load();
-
       Altacontroller controller = fxmlLoader.getController();
       controller.setControladorPrincipal(this);
       controller.limpiar();
-
       Stage scene = new Stage();
       scene.setTitle("Nueva Entidad");
       scene.setScene(new Scene(root));
       scene.setResizable(false);
       scene.showAndWait();
     } catch (IOException e) {
-      mostrarError("Error al abrir la ventana de alta", e);
+      mostrarError("Ha surgido un error al abrir la ventana de alta", e);
     }
   }
 
@@ -136,11 +124,9 @@ public class HelloController {
       try {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/bancomfh/clienteAlta.fxml"));
         Parent root = fxmlLoader.load();
-
         Altacontroller controller = fxmlLoader.getController();
         controller.setControladorPrincipal(this);
         controller.cargarDatos(selectedItem);
-
         Stage stage = new Stage();
         stage.setTitle("Editar Registro");
         stage.setScene(new Scene(root));
@@ -157,16 +143,14 @@ public class HelloController {
     Thread cargarDatosThread = new Thread(() -> {
       try {
         final List<irDefault> resultados = Banco.buscarBancos("");
-
         Platform.runLater(() -> {
-          tableItems.clear();
-          tableItems.addAll(resultados);
+          tablaCampos.clear();
+          tablaCampos.addAll(resultados);
         });
       } catch (SQLException e) {
         mostrarError("Error al actualizar la tabla", e);
       }
     });
-
     cargarDatosThread.setDaemon(true);
     cargarDatosThread.start();
   }
@@ -179,9 +163,7 @@ public class HelloController {
       alert.setTitle("Confirmar borrado");
       alert.setHeaderText("¿Estas seguro de que quieres borrar este registro?");
       alert.setContentText("Esta acción no se puede deshacer.");
-
       Optional<ButtonType> result = alert.showAndWait();
-
       if (result.isPresent() && result.get() == ButtonType.OK) {
         Thread eliminarThread = new Thread(() -> {
           try {
@@ -193,7 +175,7 @@ public class HelloController {
 
             Platform.runLater(() -> {
               if (affected > 0) {
-                tableItems.remove(selectedItem);
+                tablaCampos.remove(selectedItem);
                 mostrarInformacion("Éxito", "Registro eliminado correctamente");
               } else {
                 mostrarAdvertencia("Aviso", "No se pudo eliminar el registro");
@@ -203,7 +185,6 @@ public class HelloController {
             mostrarError("Error al borrar el registro", e);
           }
         });
-
         eliminarThread.setDaemon(true);
         eliminarThread.start();
       }
@@ -211,8 +192,6 @@ public class HelloController {
       mostrarAdvertencia("Aviso", "Seleccione un registro para borrar por favor");
     }
   }
-
-
   private void mostrarError(String titulo, Throwable exception) {
     Platform.runLater(() -> {
       Alert error = new Alert(Alert.AlertType.ERROR);
@@ -222,7 +201,6 @@ public class HelloController {
       error.show();
     });
   }
-
   private void mostrarAdvertencia(String titulo, String mensaje) {
     Platform.runLater(() -> {
       Alert aviso = new Alert(Alert.AlertType.WARNING);
@@ -231,7 +209,6 @@ public class HelloController {
       aviso.show();
     });
   }
-
   private void mostrarInformacion(String titulo, String mensaje){
     Platform.runLater(() -> {
       Alert info = new Alert(Alert.AlertType.INFORMATION);
