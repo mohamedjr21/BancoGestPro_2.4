@@ -15,10 +15,23 @@ public class irDefault {
     this.jsonValue = new SimpleStringProperty(jsonValue);
   }
 
-  public int getId() { return id.get(); }
-  public int getFieldId() { return fieldId.get(); }
-  public String getCondition() { return condition.get(); }
-  public String getJsonValue() { return jsonValue.get(); }
+  public int getId(){
+    return id.get();
+  }
+  public int getFieldId() {
+    return fieldId.get();
+  }
+  public String getCondition(){
+    return condition.get();
+  }
+  public String getJsonValue() {
+    return jsonValue.get();
+  }
+
+  public void setId(int id) { this.id.set(id); }
+  public void setFieldId(int fieldId) { this.fieldId.set(fieldId); }
+  public void setCondition(String condition) { this.condition.set(condition); }
+  public void setJsonValue(String jsonValue) { this.jsonValue.set(jsonValue); }
 
   public IntegerProperty idProperty() { return id; }
   public IntegerProperty fieldIdProperty() { return fieldId; }

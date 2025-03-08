@@ -6,7 +6,7 @@ public class Conexiondb {
   public static Connection connection = null;
   public static Connection getConnection() {
 
-    String dbName = "Odoo";
+    String dbName = "odoo";
     String dbPort = "5432";
     String username = "odoo";
     String password = "odoo";
@@ -19,8 +19,6 @@ public class Conexiondb {
       e.printStackTrace();
       System.exit(-1);
     }
-
     return connection;
   }
-
 }

@@ -1,11 +1,10 @@
 package Controladores;
 
-import DAO.Banco;
-import DAO.Conexiondb;
-import javafx.scene.image.ImageView;
-import modelo.irDefault;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,13 +12,22 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import DAO.Banco;
+import DAO.Conexiondb;
+import modelo.irDefault;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 public class HelloController {
+  private final StringProperty searchText = new SimpleStringProperty("");
+  private final BooleanProperty hasSelection = new SimpleBooleanProperty(false);
+  private final ObservableList<irDefault> tableItems = FXCollections.observableArrayList();
 
   @FXML
   public TableView<irDefault> InicializarTabla;
@@ -38,86 +46,92 @@ public class HelloController {
   @FXML
   private Button borrarButton;
   @FXML
-  private ImageView Buscar;
+  private Button BuscarButton;
+  @FXML
+  private Button altaBoton;
+  @FXML
+  private ImageView BuscarButon;
   @FXML
   private ImageView Borrar;
 
   @FXML
-  public void BuscarButon(ActionEvent actionEvent) {
-    final String searchTerm = NombreIntro.getText();
+  public void initialize() {
+    columna1.setCellValueFactory(new PropertyValueFactory<>("id"));
+    columna2.setCellValueFactory(new PropertyValueFactory<>("fieldId"));
+    columna3.setCellValueFactory(new PropertyValueFactory<>("condition"));
+    columna4.setCellValueFactory(new PropertyValueFactory<>("jsonValue"));
 
-    Task<Void> tarea = new Task<Void>() {
-      @Override
-      protected Void call() throws Exception {
-        try {
+    InicializarTabla.setItems(tableItems);
 
-          List<irDefault> buscarBancos;
-          try {
+    Bindings.bindBidirectional(NombreIntro.textProperty(), searchText);
 
-            int id = Integer.parseInt(searchTerm);
-            buscarBancos = Banco.buscarBancosPorId(id);
-          } catch (NumberFormatException e) {
-            buscarBancos = Banco.buscarBancos(searchTerm);
-          }
+    InicializarTabla.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+      hasSelection.set(newValue != null);
+    });
 
-          final List<irDefault> BuscarBancos = buscarBancos;
-          Platform.runLater(() -> {
-            InicializarTabla.getItems().clear();
-            InicializarTabla.getItems().addAll(BuscarBancos);
-          });
+    editarButton.disableProperty().bind(hasSelection.not());
+    borrarButton.disableProperty().bind(hasSelection.not());
 
-        } catch (SQLException e) {
 
-          System.err.println("Error de SQL al consultar:" + e.getMessage());
-          Platform.runLater(() -> {
-            Alert error = new Alert(Alert.AlertType.ERROR);
-            error.setTitle("Error");
-            error.setContentText("Error al realizar la búsqueda,vuelva a intentarlo por favor.");
-            error.show();
-          });
-        }
-        return null;
-      }
-    };
-
-    Thread hilo = new Thread(tarea);
-    hilo.start();
+    try {
+      actualizarTabla();
+    } catch (SQLException e) {
+      mostrarError("Error al cargar datos iniciales", e);
+    }
   }
 
 
   @FXML
-  public void Altabuton(ActionEvent actionEvent) {
-    Thread altahilo = new Thread(() -> {
+  public void BuscarButon(ActionEvent actionEvent) {
+    final String termino = searchText.get().trim();
+
+    Thread buscarThread = new Thread(() -> {
       try {
+         List<irDefault> resultados;
 
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/bancomfh/clienteAlta.fxml"));
-        Parent root = fxmlLoader.load();
-        Altacontroller controller = fxmlLoader.getController();
-        controller.setControladorPrincipal(this);
-        controller.limpiar();
+        try {
+          int id = Integer.parseInt(termino);
+          resultados = Banco.buscarBancosPorId(id);
+        } catch (NumberFormatException e) {
+          resultados = Banco.buscarBancos(termino);
+        }
 
+        List<irDefault> finalResultados = resultados;
         Platform.runLater(() -> {
-          Stage scene = new Stage();
-          scene.setTitle("Nueva Entidad");
-          scene.setScene(new Scene(root));
-          scene.setResizable(false);
-          scene.showAndWait();
+          tableItems.clear();
+          tableItems.addAll(finalResultados);
         });
-      } catch (IOException e) {
-        Platform.runLater(() -> {
-          Alert error = new Alert(Alert.AlertType.ERROR);
-          error.setTitle("Error");
-          error.setContentText("Error al cargar la ventana: " + e.getMessage());
-          error.show();
-        });
+      } catch (SQLException e) {
+        mostrarError("Error al realizar la búsqueda", e);
       }
     });
-    altahilo.start();
+
+    buscarThread.setDaemon(true);
+    buscarThread.start();
+  }
+  @FXML
+  public void Altabuton(ActionEvent actionEvent) {
+    try {
+      FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/bancomfh/clienteAlta.fxml"));
+      Parent root = fxmlLoader.load();
+
+      Altacontroller controller = fxmlLoader.getController();
+      controller.setControladorPrincipal(this);
+      controller.limpiar();
+
+      Stage scene = new Stage();
+      scene.setTitle("Nueva Entidad");
+      scene.setScene(new Scene(root));
+      scene.setResizable(false);
+      scene.showAndWait();
+    } catch (IOException e) {
+      mostrarError("Error al abrir la ventana de alta", e);
+    }
   }
 
   @FXML
   public void EditarButon() {
-    irDefault selectedItem = InicializarTabla.getSelectionModel().getSelectedItem();
+    final irDefault selectedItem = InicializarTabla.getSelectionModel().getSelectedItem();
     if (selectedItem != null) {
       try {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/bancomfh/clienteAlta.fxml"));
@@ -125,7 +139,6 @@ public class HelloController {
 
         Altacontroller controller = fxmlLoader.getController();
         controller.setControladorPrincipal(this);
-
         controller.cargarDatos(selectedItem);
 
         Stage stage = new Stage();
@@ -134,49 +147,32 @@ public class HelloController {
         stage.setResizable(false);
         stage.showAndWait();
       } catch (IOException e) {
-        e.getMessage();
+        mostrarError("Error al abrir la ventana de edición", e);
       }
     } else {
-      Alert warning = new Alert(Alert.AlertType.WARNING);
-      warning.setTitle("Aviso");
-      warning.setContentText("Por favor seleccione un registro para editar");
-      warning.show();
+      mostrarAdvertencia("Aviso", "Por favor seleccione un registro para editar");
     }
   }
-  @FXML
-  public void initialize() {
-    columna1.setCellValueFactory(new PropertyValueFactory<>("id"));
-    columna2.setCellValueFactory(new PropertyValueFactory<>("fieldId"));
-    columna3.setCellValueFactory(new PropertyValueFactory<>("condition"));
-    columna4.setCellValueFactory(new PropertyValueFactory<>("jsonValue"));
+  public void actualizarTabla() throws SQLException {
+    Thread cargarDatosThread = new Thread(() -> {
+      try {
+        final List<irDefault> resultados = Banco.buscarBancos("");
 
-    editarButton.setDisable(true);
-    borrarButton.setDisable(true);
-
-    InicializarTabla.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, valor) -> {
-      boolean haySeleccion = valor != null;
-      editarButton.setDisable(!haySeleccion);
-      borrarButton.setDisable(!haySeleccion);
-
-      if (haySeleccion) {
-        editarButton.setFocusTraversable(true);
-        borrarButton.setFocusTraversable(true);
-        editarButton.requestFocus();
+        Platform.runLater(() -> {
+          tableItems.clear();
+          tableItems.addAll(resultados);
+        });
+      } catch (SQLException e) {
+        mostrarError("Error al actualizar la tabla", e);
       }
     });
-  }
 
-
-  public void actualizarTabla() throws SQLException {
-    InicializarTabla.getItems().clear();
-    List<irDefault> buscarBancos = Banco.buscarBancos("");
-    InicializarTabla.getItems().addAll(buscarBancos);
-    System.out.println("Tabla ha sido actualizada correctamente");
+    cargarDatosThread.setDaemon(true);
+    cargarDatosThread.start();
   }
   @FXML
   public void BorrarButon(ActionEvent actionEvent) {
-
-    irDefault selectedItem = InicializarTabla.getSelectionModel().getSelectedItem();
+    final irDefault selectedItem = InicializarTabla.getSelectionModel().getSelectedItem();
 
     if (selectedItem != null) {
       Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -187,32 +183,61 @@ public class HelloController {
       Optional<ButtonType> result = alert.showAndWait();
 
       if (result.isPresent() && result.get() == ButtonType.OK) {
-        try {
-          String query = "DELETE FROM ir_default WHERE id = ?";
-          Connection conexion = Conexiondb.getConnection();
-          PreparedStatement pstmt = conexion.prepareStatement(query);
-          pstmt.setInt(1, selectedItem.getId());
-          pstmt.executeUpdate();
+        Thread eliminarThread = new Thread(() -> {
+          try {
+            String query = "DELETE FROM ir_default WHERE id = ?";
+            Connection conexion = Conexiondb.getConnection();
+            PreparedStatement pstmt = conexion.prepareStatement(query);
+            pstmt.setInt(1, selectedItem.getId());
+            final int affected = pstmt.executeUpdate();
 
-          InicializarTabla.getItems().remove(selectedItem);
+            Platform.runLater(() -> {
+              if (affected > 0) {
+                tableItems.remove(selectedItem);
+                mostrarInformacion("Éxito", "Registro eliminado correctamente");
+              } else {
+                mostrarAdvertencia("Aviso", "No se pudo eliminar el registro");
+              }
+            });
+          } catch (SQLException e) {
+            mostrarError("Error al borrar el registro", e);
+          }
+        });
 
-          //Alert borrado = new Alert(Alert.AlertType.INFORMATION);
-          //borrado.setTitle("Éxito");
-          //borrado.setContentText("Registro eliminado correctamente");
-          //borrado.show();
-
-        } catch (SQLException e) {
-          Alert error = new Alert(Alert.AlertType.ERROR);
-          error.setTitle("Error");
-          error.setContentText("Error al borrar el registro,vuelva a intentarlo por favor: " + e.getMessage());
-          error.show();
-        }
+        eliminarThread.setDaemon(true);
+        eliminarThread.start();
       }
     } else {
-      Alert aviso = new Alert(Alert.AlertType.WARNING);
-      aviso.setTitle("Aviso");
-      aviso.setContentText(" seleccione un registro para borrar por favor");
-      aviso.show();
+      mostrarAdvertencia("Aviso", "Seleccione un registro para borrar por favor");
     }
+  }
+
+
+  private void mostrarError(String titulo, Throwable exception) {
+    Platform.runLater(() -> {
+      Alert error = new Alert(Alert.AlertType.ERROR);
+      error.setTitle("Error");
+      error.setHeaderText(titulo);
+      error.setContentText(exception.getMessage());
+      error.show();
+    });
+  }
+
+  private void mostrarAdvertencia(String titulo, String mensaje) {
+    Platform.runLater(() -> {
+      Alert aviso = new Alert(Alert.AlertType.WARNING);
+      aviso.setTitle(titulo);
+      aviso.setContentText(mensaje);
+      aviso.show();
+    });
+  }
+
+  private void mostrarInformacion(String titulo, String mensaje){
+    Platform.runLater(() -> {
+      Alert info = new Alert(Alert.AlertType.INFORMATION);
+      info.setTitle(titulo);
+      info.setContentText(mensaje);
+      info.show();
+    });
   }
 }
