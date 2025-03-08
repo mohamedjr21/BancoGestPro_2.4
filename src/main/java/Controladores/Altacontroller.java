@@ -79,14 +79,12 @@ public class Altacontroller {
 
     botonAceptar.disableProperty().bind(camposValidos.not());
   }
-
   private void validarCampoId() {
     String valor = idText.get().trim();
     if (valor.isEmpty()) {
       idValido.set(false);
       return;
     }
-
     try {
       int id = Integer.parseInt(valor);
       if (id <= 0) {
